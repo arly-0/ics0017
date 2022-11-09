@@ -5,42 +5,47 @@
 #include "ICS0017DataSource.h"
 #include <string>
 
+#pragma warning(disable : 4996)
+
 void PrintDataStructure(HEADER_D* pointer)
 {
-	if (!pointer)
+	if (pointer == NULL)
 	{
-		printf("Print: Pointer to DS cannot be null");
+		printf("DS is null and will not be printed\n");
+		return;
 	}
-	else
+	HEADER_D* currentHeaderD = pointer;
+	HEADER_A* currentHeaderA = nullptr;
+	ITEM1* currentItem = nullptr;
+	int i = 0;
+	while (currentHeaderD)
 	{
-		int i = 0;
-		while (pointer)
+		currentHeaderA = currentHeaderD->pHeaderA;
+		while (currentHeaderA)
 		{
-			while (pointer->pHeaderA)
+			currentItem = (ITEM1*)currentHeaderA->pItems;
+			while (currentItem)
 			{
-				ITEM1* item = (ITEM1*)pointer->pHeaderA->pItems;
-				while (item)
-				{
-					printf("%d)%s %lu %s \n", ++i, item->pID, item->Code, item->pTime);
-					item = item->pNext;
-				}
-				pointer->pHeaderA = pointer->pHeaderA->pNext;
+				printf("%d)%s %lu %s \n", ++i, currentItem->pID, currentItem->Code, currentItem->pTime);
+				currentItem = currentItem->pNext;
 			}
-			pointer = pointer->pNext;
+			currentHeaderA = currentHeaderA->pNext;
 		}
+		currentHeaderD = currentHeaderD->pNext;
 	}
 }
 
-bool wordIsValid(char* p, int len) 
+bool wordIsValid(char* p, int len)
 {
-	for (int i = 0; i < len; i++) {
+	for (int i = 0; i < len; i++)
+	{
 		int ascii = (int)*(p + i);
 		if (!((ascii >= 65 || ascii <= 90) || (ascii >= 97 || ascii <= 122) || ascii == 45)) return true;
 	}
 	return false;
 }
 
-bool idIsValid(char* pNewItemID) 
+bool idIsValid(char* pNewItemID)
 {
 	if (strlen(pNewItemID) < 3) return false;
 	char* spacePos = strchr(pNewItemID, ' ');
@@ -54,102 +59,412 @@ bool idIsValid(char* pNewItemID)
 	return true;
 }
 
-void createHeaderD(char first, char second, HEADER_D* p, ITEM1* pItem) 
+HEADER_A* FillNewHeaderA(ITEM1*& pNewItem, char*& secondLetter)
 {
 	HEADER_A* newHeaderA = new HEADER_A;
-	newHeaderA = (HEADER_A*)malloc(sizeof(HEADER_A));
-	newHeaderA->cBegin = second;
-	newHeaderA->pItems = pItem;
-	newHeaderA->pNext = 0;
-	HEADER_D* newHeaderD = new HEADER_D;
-	newHeaderD = (HEADER_D*)malloc(sizeof(HEADER_D));
-	newHeaderD->cBegin = first;
-	newHeaderD->pHeaderA = newHeaderA;
-	newHeaderD->pNext = 0;
-	newHeaderD->pPrior = 0;
-	while (p->pNext != 0 && (int)p->pNext->cBegin < (int)first) { p = p->pNext; }
-	if (p->pNext == 0) {
-		p->pNext = newHeaderD;
-	}
-	else {
-		newHeaderD->pNext = p->pNext;
-		p->pNext = newHeaderD;
-	}
-	return;
+	newHeaderA->pItems = pNewItem;
+	newHeaderA->cBegin = *secondLetter;
+	return newHeaderA;
 }
 
-void createHeaderA(char second, HEADER_A* p, ITEM1* pItem) 
+HEADER_D* FillNewHeaders(ITEM1*& pNewItem, char*& firstLetter, char*& secondLetter)
 {
-	HEADER_A* newHeader;
-	newHeader = (HEADER_A*)malloc(sizeof(HEADER_A));
-	newHeader->cBegin = second;
-	newHeader->pItems = pItem;
-	newHeader->pNext = 0;
-	while (p->pNext != 0 && (int)p->pNext->cBegin < (int)second) { p = p->pNext; }
-	if (p->pNext == 0) {
-		p->pNext = newHeader;
-	}
-	else {
-		newHeader->pNext = p->pNext;
-		p->pNext = newHeader;
-	}
-	return;
+	HEADER_A* newHeaderA = FillNewHeaderA(pNewItem, secondLetter);
+	HEADER_D* newHeaderD = new HEADER_D;
+	newHeaderA->pNext = nullptr;
+	newHeaderD->pHeaderA = newHeaderA;
+	newHeaderD->cBegin = *firstLetter;
+	return newHeaderD;
 }
-HEADER_D* InsertItem(HEADER_D* pointer, char* pNewItemID = 0) 
+
+
+HEADER_D* InsertItem(HEADER_D* pointer, char* pNewID)
 {
-	if (pNewItemID == 0 || idIsValid(pNewItemID)) {
-		ITEM1* pItem = (ITEM1*)GetItem(1, pNewItemID);
-		if (pNewItemID == 0) {
-			pNewItemID = pItem->pID;
-		}
-		char first = *pNewItemID;
-		char second = *(strchr(pNewItemID, ' ') + 1);
-		HEADER_D* searchP = pointer;
-		while (searchP->cBegin != first && searchP->pNext != 0) { searchP = searchP->pNext; }
-		if (searchP->cBegin != first && searchP->pNext == 0) 
+	if (pointer == NULL)
+	{
+		printf("Data structure is empty, function stopped\n");
+		return pointer;
+	}
+	ITEM1* pNewItem = nullptr;
+	if (pNewID == NULL)
+	{
+		pNewItem = (ITEM1*)GetItem(7, nullptr);
+	}
+	else
+	{
+		if (idIsValid(pNewID))
 		{
-			createHeaderD(first, second, pointer, pItem);
+			pNewItem = (ITEM1*)GetItem(1, pNewID);
+		}
+		else
+		{
+			printf("Invalid ID format\n");
 			return pointer;
 		}
-		else 
+	}
+
+
+	char* firstLetterPtr = pNewItem->pID;
+
+	char* secondLetterPtr = strchr(pNewItem->pID, ' ') + 1;
+
+	HEADER_D* currentHeaderD = pointer;
+
+	HEADER_D* previousHeaderD = nullptr;
+
+	HEADER_A* currentHeaderA = nullptr;
+
+	HEADER_A* previousHeaderA = nullptr;
+
+	ITEM1* currentItem = nullptr;
+
+	while (currentHeaderD)
+
+	{
+		if (currentHeaderD->cBegin == *firstLetterPtr) // add item to existing headers
+
 		{
-			HEADER_A* searchA = searchP->pHeaderA;
-			while (searchA->cBegin != second && searchA->pNext != 0) { searchA = searchA->pNext; }
-			if (searchA->cBegin != second && searchA->pNext == 0) 
+
+			currentHeaderA = currentHeaderD->pHeaderA;
+
+			// while loop covering HEADER_A, with a letter of the 2nd word
+
+			while (currentHeaderA)
+
 			{
-				createHeaderA(second, searchP->pHeaderA, pItem);
-				return pointer;
-			}
-			else 
-			{
-				ITEM1* searchI = (ITEM1*)searchA->pItems;
-				while (strcmp(searchI->pID, pItem->pID) != 0 && searchI->pNext != 0) { searchI = searchI->pNext; }
-				if (strcmp(searchI->pID, pItem->pID) != 0 && searchI->pNext == 0) 
+
+				if (currentHeaderA->cBegin == *secondLetterPtr)
+
 				{
-					pItem->pNext = (ITEM1*)searchA->pItems;
-					searchA->pItems = pItem;
+
+					currentItem = (ITEM1*)currentHeaderA->pItems;
+
+					// while loop covering items
+
+					while (currentItem)
+
+					{
+
+						if (!strcmp(currentItem->pID, pNewItem->pID)) // check if the item with the same ID already exists
+
+						{
+
+							printf("Item with such ID already exists\n");
+							return pointer;
+						}
+
+						else if (!currentItem->pNext)
+
+						{
+
+							currentItem->pNext = pNewItem;
+
+							pNewItem->pNext = nullptr;
+
+
+							return pointer;
+
+						}
+
+						currentItem = currentItem->pNext;
+
+					}
+
+				} // add a non-exisitng header for the item in the middle of the list
+
+				else if ((previousHeaderA != nullptr) && (currentHeaderA->cBegin > *secondLetterPtr && previousHeaderA->cBegin < *secondLetterPtr))
+
+				{
+
+					HEADER_A* newHeaderAPtr = FillNewHeaderA(pNewItem, secondLetterPtr);
+
+					previousHeaderA->pNext = newHeaderAPtr;
+
+					newHeaderAPtr->pNext = currentHeaderA;
+
 					return pointer;
-				}
-				else 
+
+				} // add a non-exisitng header for the item at the start of the list
+
+				else if (previousHeaderA == nullptr && currentHeaderA->cBegin > *secondLetterPtr)
+
 				{
-					//The security ID structure is invalid.
-					throw 1337;
+
+					HEADER_A* newHeaderAPtr = FillNewHeaderA(pNewItem, secondLetterPtr);
+
+					currentHeaderD->pHeaderA = newHeaderAPtr;
+
+					newHeaderAPtr->pNext = currentHeaderA;
+
+					return pointer;
+
+				} // add a non-exisitng header for the item at the end of the list
+
+				else if (currentHeaderA->pNext == nullptr && currentHeaderA->cBegin < *secondLetterPtr)
+
+				{
+
+					HEADER_A* newHeaderAPtr = FillNewHeaderA(pNewItem, secondLetterPtr);
+
+					newHeaderAPtr->pNext = nullptr;
+
+					currentHeaderA->pNext = newHeaderAPtr;
+
+					return pointer;
+
 				}
+
+				previousHeaderA = currentHeaderA;
+
+				currentHeaderA = currentHeaderA->pNext;
+
+			}
+
+		} // add a non-exisitng header for the item in the middle of the list
+
+		else if ((previousHeaderD != nullptr) && (currentHeaderD->cBegin > *firstLetterPtr && previousHeaderD->cBegin < *firstLetterPtr))
+
+		{
+
+			HEADER_D* newHeaderBPtr = FillNewHeaders(pNewItem, firstLetterPtr, secondLetterPtr);
+
+			previousHeaderD->pNext = newHeaderBPtr;
+
+			newHeaderBPtr->pNext = currentHeaderD;
+
+			return pointer;
+
+		} // add a non-exisitng header for the item at the start of the list
+
+		else if (previousHeaderD == nullptr && currentHeaderD->cBegin > *firstLetterPtr)
+
+		{
+
+			HEADER_D* newHeaderBPtr = FillNewHeaders(pNewItem, firstLetterPtr, secondLetterPtr);
+
+			pointer = newHeaderBPtr;
+
+			newHeaderBPtr->pNext = currentHeaderD;
+
+
+			return pointer;
+
+		} // add a non-exisitng header for the item at the end of the list
+
+		else if (currentHeaderD->pNext == nullptr && currentHeaderD->cBegin < *firstLetterPtr)
+
+		{
+
+			HEADER_D* newHeaderBPtr = FillNewHeaders(pNewItem, firstLetterPtr, secondLetterPtr);
+
+			newHeaderBPtr->pNext = nullptr;
+
+			currentHeaderD->pNext = newHeaderBPtr;
+			return pointer;
+
+		}
+
+		previousHeaderD = currentHeaderD;
+
+		currentHeaderD = currentHeaderD->pNext;
+
+	}
+}
+char* createFirstWord(char* pNewItemID)
+{
+	char* pWordOne = (char*)malloc(1 * sizeof(char));
+	char* pSpace = strchr(pNewItemID, ' ');
+	if (!pSpace)
+	{
+		return NULL;
+	}
+
+	for (int i = 1; *(pNewItemID + i); i++)
+	{
+		if ((pNewItemID + i) == pSpace)
+		{
+			pWordOne = (char*)malloc(i + 1 * sizeof(char));
+			if (*pWordOne != NULL)
+			{
+				*(pWordOne + i) = '\0';
 			}
 		}
 	}
-	else 
+
+	if (pSpace)
 	{
-		//The security ID structure is invalid.
-		throw 1337;
+		int i = 0;
+		for (i = 0; (pNewItemID + i) != pSpace; *(pWordOne + i) = *(pNewItemID + i), i++);
 	}
+
+	return pWordOne;
 }
+
+char* createSecondWord(char* pNewItemID)
+{
+	char* pWordTwo = (char*)malloc(1 * sizeof(char));
+	char* pSpace = strchr(pNewItemID, ' ');
+	if (!pSpace || !(*(pSpace + 1)))
+	{
+		return NULL;
+	}
+
+	for (int i = 1; *(pSpace + i); i++)
+	{
+		if (!(*(pSpace + i + 1)))
+		{
+			pWordTwo = (char*)malloc((i + 1) * sizeof(char));
+			if (*pWordTwo != NULL)
+			{
+				*(pWordTwo + i) = '\0';
+			}
+		}
+	}
+
+	if ((pSpace + 1))
+	{
+		for (int i = 0; *(pSpace + i + 1); *(pWordTwo + i) = *(pSpace + i + 1), i++);
+	}
+
+	return pWordTwo;
+}
+
+bool compareStrings(char* str1, char* str2)
+{
+	if (strlen(str1) != strlen(str2))
+	{
+		return false;
+	}
+	else
+	{
+		size_t stlen = strlen(str1);
+		for (int i = 0; i < stlen; i++)
+		{
+			if (*(str1 + i) == *(str2 + i))
+			{
+				if (i + 1 == stlen)
+				{
+					return true;
+				}
+				return false;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+	return false;
+}
+
+ITEM1* getPreviousItem(ITEM1* pItem, ITEM1* pItemInit)
+{
+	ITEM1* pPrevItem = pItemInit;
+
+	while (pPrevItem)
+	{
+		if (pPrevItem->pNext == pItem)
+		{
+			return pPrevItem;
+		}
+		else if (pPrevItem = pItem)
+		{
+			return NULL;
+		}
+		pPrevItem = pPrevItem->pNext;
+	}
+	return pPrevItem;
+}
+
+HEADER_D* RemoveItem(HEADER_D* pointer, char* pItemID)
+{
+	if (!pointer)
+	{
+		printf("Data structure is empty\n");
+		return nullptr;
+	}
+	if (!pItemID)
+	{
+		printf("ID is null\n");
+		return nullptr;
+	}
+	if (idIsValid(pItemID) == false)
+	{
+		throw 2;
+	}
+	char* pFirstWord = createFirstWord(pItemID);
+	char* pSecondWord = createSecondWord(pItemID);
+	char letters[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	HEADER_D* structure = pointer;
+	while (structure->pHeaderA)
+	{
+		if (structure->pHeaderA->cBegin == *pFirstWord)
+		{
+			for (int i = 0; i < 26; i++)
+			{
+				if (structure->pHeaderA->pItems != NULL && letters[i] == *pSecondWord)
+				{
+					ITEM1* pItem = (ITEM1*)(structure->pHeaderA->pItems);
+					while (pItem != NULL)
+					{
+						char* pItemFirstWord = createFirstWord(pItem->pID);
+						char* pItemSecondWord = createSecondWord(pItem->pID);
+						if (compareStrings(pItemFirstWord, pFirstWord) && compareStrings(pItemSecondWord, pSecondWord))
+						{
+							ITEM1* pPrevItem = (ITEM1*)malloc(sizeof(ITEM1));
+							pPrevItem = getPreviousItem(pItem, (ITEM1*)structure->pHeaderA->pItems + i);
+							ITEM1* pNextItem = NULL;
+							if (pItem->pNext != NULL)
+							{
+								ITEM1* pNextItem = pItem->pNext;
+							}
+							else
+							{
+								ITEM1* pNextItem = NULL;
+							}
+							if (pPrevItem == NULL)
+							{
+								delete(pItem);
+								return pointer;
+							}
+							else
+							{
+								pPrevItem->pNext = pNextItem;
+								delete(pItem);
+								return pointer;
+							}
+						}
+						pItem = pItem->pNext;
+					}
+				}
+			}
+		}
+		structure = structure->pNext;
+	}
+	throw 3;
+}
+
 int main()
 {
-	HEADER_D* p = GetStruct4(1, 30);
-	PrintDataStructure(p);
-	char id[] = "Z A";
-	char* iD = id;
-	HEADER_D* ds = InsertItem(p, iD);
-	PrintDataStructure(ds);
+	// Task 1
+	HEADER_D* DS = GetStruct4(1, 30);
+	PrintDataStructure(DS);
+
+	// TASK 2
+	DS = InsertItem(DS, (char*)"Z A");
+	DS = InsertItem(DS, (char*)"Z Z");
+	DS = InsertItem(DS, (char*)"Z K");
+	DS = InsertItem(DS, (char*)"A Z");
+	DS = InsertItem(DS, (char*)"A A");
+	DS = InsertItem(DS, (char*)"A K");
+	DS = InsertItem(DS, (char*)"G Z");
+	DS = InsertItem(DS, (char*)"G A");
+	DS = InsertItem(DS, (char*)"G K");
+	DS = InsertItem(DS, (char*)"M A");
+	DS = InsertItem(DS, (char*)"M Ba");
+	DS = InsertItem(DS, (char*)"M Bb");
+	DS = InsertItem(DS, (char*)"M Z");
+	DS = InsertItem(DS, (char*)"M Ba");
+	DS = InsertItem(DS, (char*)"Mba");
+	PrintDataStructure(DS);
 }
