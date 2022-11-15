@@ -4,400 +4,109 @@
 #include "Headers.h"
 #include "ICS0017DataSource.h"
 #include <string>
-
-#pragma warning(disable : 4996)
-
-void PrintDataStructure(HEADER_D* pointer)
-{
-	if (pointer == NULL)
-	{
-		printf("DS is null and will not be printed\n");
-		return;
-	}
-	HEADER_D* currentHeaderD = pointer;
-	HEADER_A* currentHeaderA = nullptr;
-	ITEM1* currentItem = nullptr;
-	int i = 0;
-	while (currentHeaderD)
-	{
-		currentHeaderA = currentHeaderD->pHeaderA;
-		while (currentHeaderA)
-		{
-			currentItem = (ITEM1*)currentHeaderA->pItems;
-			while (currentItem)
-			{
-				printf("%d)%s %lu %s \n", ++i, currentItem->pID, currentItem->Code, currentItem->pTime);
-				currentItem = currentItem->pNext;
-			}
-			currentHeaderA = currentHeaderA->pNext;
-		}
-		currentHeaderD = currentHeaderD->pNext;
-	}
-}
-
-bool wordIsValid(char* p, int len)
-{
-	for (int i = 0; i < len; i++)
-	{
-		int ascii = (int)*(p + i);
-		if (!((ascii >= 65 || ascii <= 90) || (ascii >= 97 || ascii <= 122) || ascii == 45)) return true;
-	}
-	return false;
-}
-
-bool idIsValid(char* pNewItemID)
-{
-	if (strlen(pNewItemID) < 3) return false;
-	char* spacePos = strchr(pNewItemID, ' ');
-	if (spacePos == 0 || strchr(spacePos + 1, ' ') != 0) return false;
-	char first = *pNewItemID;
-	char second = *(spacePos + 1);
-	if ((int)first < 65 || (int)first > 90 || (int)second < 65 || (int)second > 90) return false;
-	int lenFirst = spacePos - pNewItemID;
-	int lenSecond = strlen(pNewItemID) - lenFirst - 1;
-	if (wordIsValid(pNewItemID, lenFirst) || wordIsValid(spacePos + 1, lenSecond)) return false;
-	return true;
-}
-
-HEADER_A* FillNewHeaderA(ITEM1*& pNewItem, char*& secondLetter)
-{
-	HEADER_A* newHeaderA = new HEADER_A;
-	newHeaderA->pItems = pNewItem;
-	newHeaderA->cBegin = *secondLetter;
-	return newHeaderA;
-}
-
-HEADER_D* FillNewHeaders(ITEM1*& pNewItem, char*& firstLetter, char*& secondLetter)
-{
-	HEADER_A* newHeaderA = FillNewHeaderA(pNewItem, secondLetter);
-	HEADER_D* newHeaderD = new HEADER_D;
-	newHeaderA->pNext = nullptr;
-	newHeaderD->pHeaderA = newHeaderA;
-	newHeaderD->cBegin = *firstLetter;
-	return newHeaderD;
-}
-
-HEADER_D* InsertItem(HEADER_D* pointer, char* pNewID)
-{
-	if (pointer == NULL)
-	{
-		printf("Data structure is empty, function stopped\n");
-		return pointer;
-	}
-	ITEM1* pNewItem = nullptr;
-	if (pNewID == NULL)
-	{
-		pNewItem = (ITEM1*)GetItem(7, nullptr);
-	}
-	else
-	{
-		if (idIsValid(pNewID))
-		{
-			pNewItem = (ITEM1*)GetItem(1, pNewID);
-		}
-		else
-		{
-			printf("Invalid ID format\n");
-			return pointer;
-		}
-	}
-
-	char* firstLetter = pNewItem->pID;
-	char* secondLetter = strchr(pNewItem->pID, ' ') + 1;
-	HEADER_D* currentHeaderD = pointer;
-	HEADER_D* previousHeaderD = nullptr;
-	HEADER_A* currentHeaderA = nullptr;
-	HEADER_A* previousHeaderA = nullptr;
-	ITEM1* currentItem = nullptr;
-	while (currentHeaderD)
-	{
-		if (currentHeaderD->cBegin == *firstLetter) // add item to existing headers
-		{
-			currentHeaderA = currentHeaderD->pHeaderA;
-			// while loop covering HEADER_A, with a letter of the 2nd word
-			while (currentHeaderA)
-			{
-				if (currentHeaderA->cBegin == *secondLetter)
-				{
-					currentItem = (ITEM1*)currentHeaderA->pItems;
-					// while loop covering items
-					while (currentItem)
-					{
-						if (!strcmp(currentItem->pID, pNewItem->pID)) // check if the item with the same ID already exists
-						{
-							printf("Item with such ID already exists\n");
-							return pointer;
-						}
-						else if (!currentItem->pNext)
-						{
-							currentItem->pNext = pNewItem;
-							pNewItem->pNext = nullptr;
-							return pointer;
-						}
-						currentItem = currentItem->pNext;
-					}
-
-				} // add a non-exisitng header for the item in the middle of the list
-
-				else if ((previousHeaderA != nullptr) && (currentHeaderA->cBegin > *secondLetter && previousHeaderA->cBegin < *secondLetter))
-				{
-					HEADER_A* newHeaderAPtr = FillNewHeaderA(pNewItem, secondLetter);
-					previousHeaderA->pNext = newHeaderAPtr;
-					newHeaderAPtr->pNext = currentHeaderA;
-					return pointer;
-				} // add a non-exisitng header for the item at the start of the list
-				else if (previousHeaderA == nullptr && currentHeaderA->cBegin > *secondLetter)
-				{
-					HEADER_A* newHeaderAPtr = FillNewHeaderA(pNewItem, secondLetter);
-					currentHeaderD->pHeaderA = newHeaderAPtr;
-					newHeaderAPtr->pNext = currentHeaderA;
-					return pointer;
-				} // add a non-exisitng header for the item at the end of the list
-				else if (currentHeaderA->pNext == nullptr && currentHeaderA->cBegin < *secondLetter)
-				{
-					HEADER_A* newHeaderAPtr = FillNewHeaderA(pNewItem, secondLetter);
-					newHeaderAPtr->pNext = nullptr;
-					currentHeaderA->pNext = newHeaderAPtr;
-					return pointer;
-				}
-				previousHeaderA = currentHeaderA;
-				currentHeaderA = currentHeaderA->pNext;
-			}
-		} // add a non-exisitng header for the item in the middle of the list
-		else if ((previousHeaderD != nullptr) && (currentHeaderD->cBegin > *firstLetter && previousHeaderD->cBegin < *firstLetter))
-		{
-			HEADER_D* newHeaderBPtr = FillNewHeaders(pNewItem, firstLetter, secondLetter);
-			previousHeaderD->pNext = newHeaderBPtr;
-			newHeaderBPtr->pNext = currentHeaderD;
-			return pointer;
-		} // add a non-exisitng header for the item at the start of the list
-		else if (previousHeaderD == nullptr && currentHeaderD->cBegin > *firstLetter)
-		{
-			HEADER_D* newHeaderBPtr = FillNewHeaders(pNewItem, firstLetter, secondLetter);
-			pointer = newHeaderBPtr;
-			newHeaderBPtr->pNext = currentHeaderD;
-			return pointer;
-		} // add a non-exisitng header for the item at the end of the list
-		else if (currentHeaderD->pNext == nullptr && currentHeaderD->cBegin < *firstLetter)
-		{
-			HEADER_D* newHeaderBPtr = FillNewHeaders(pNewItem, firstLetter, secondLetter);
-			newHeaderBPtr->pNext = nullptr;
-			currentHeaderD->pNext = newHeaderBPtr;
-			return pointer;
-		}
-		previousHeaderD = currentHeaderD;
-		currentHeaderD = currentHeaderD->pNext;
-	}
-}
-
-HEADER_D* RemoveItem(HEADER_D* pointer, char* pItemID)
-{
-	if (pointer == NULL)
-	{
-		printf("Data structure is empty\n");
-		return pointer;
-	}
-
-	if (pItemID == NULL)
-	{
-		printf("ID is null\n");
-		return pointer;
-	}
-	else
-	{
-		if (idIsValid(pItemID) == false)
-		{
-			printf("ID is in invalid format.\n");
-			return pointer;
-		}
-	}
-	char* firstLetter = pItemID;
-
-	char* secondLetter = strchr(pItemID, ' ') + 1;
-
-	HEADER_D* currentPositionD = pointer;
-
-	HEADER_D* previousPositionD = nullptr;
-
-	HEADER_A* currentPositionA = nullptr;
-
-	HEADER_A* previousPositionA = nullptr;
-
-	ITEM1* currentPositionItem = nullptr;
-
-	ITEM1* previousPositionItem = nullptr;
-
-	char headerDFlag = 0;
-
-	char headerAFlag = 0;
-
-	char itemFlag = 0;
-
-	// while loop covering HEADER_D, with a letter of the 1st word
-
-	while (currentPositionD)
-	{
-		if (currentPositionD->cBegin == *firstLetter) // header D with the required letter exists
-		{
-			headerDFlag = 1;
-			currentPositionA = currentPositionD->pHeaderA;
-			// while loop covering HEADER_A, with a letter of the 2nd word
-			while (currentPositionA)
-			{
-				if (currentPositionA->cBegin == *secondLetter)
-				{
-					headerAFlag = 1;
-					currentPositionItem = (ITEM1*)currentPositionA->pItems;
-					// while loop covering items
-					while (currentPositionItem)
-					{
-						if (!strcmp(currentPositionItem->pID, pItemID)) // check if the item with the same ID already exists
-						{
-							itemFlag = 1;
-							if (previousPositionItem != nullptr && currentPositionItem->pNext != nullptr) // item in the middle
-							{
-								previousPositionItem->pNext = currentPositionItem->pNext;
-								delete[] currentPositionItem->pID;
-								delete currentPositionItem; 
-								return pointer;
-							}
-							else if (previousPositionItem != nullptr && currentPositionItem->pNext == nullptr) // item at the end
-							{
-								previousPositionItem->pNext = nullptr;
-								delete[] currentPositionItem->pID;
-								delete currentPositionItem;
-								return pointer;
-							}
-							else if (previousPositionItem == nullptr && currentPositionItem->pNext != nullptr) // item at the start
-							{
-								currentPositionA->pItems = currentPositionItem->pNext;
-								delete[] currentPositionItem->pID;
-								delete currentPositionItem;
-								return pointer;
-							}
-							else if (previousPositionItem == nullptr && currentPositionItem->pNext == nullptr) // 1 item in the list
-							{
-								delete[] currentPositionItem->pID;
-								delete currentPositionItem;
-								if (previousPositionA != nullptr && currentPositionA->pNext != nullptr) // there are several A headers under 1 D header, header under removal is in the middle
-								{
-									previousPositionA->pNext = currentPositionA->pNext;
-									delete currentPositionA;
-									return pointer;
-								}
-								else if (previousPositionA != nullptr && currentPositionA->pNext == nullptr) // there are several A headers under 1 D header, header under removal is at the end
-								{
-									previousPositionA->pNext = nullptr;
-									delete currentPositionA;
-									return pointer;
-								}
-								else if (previousPositionA == nullptr && currentPositionA->pNext != nullptr) // there are several A headers under 1 D header, header under removal is at the start
-								{
-									currentPositionD->pHeaderA = currentPositionA->pNext;
-									delete currentPositionA;
-									return pointer;
-								}
-								else if (previousPositionA == nullptr && currentPositionA->pNext == nullptr) // there is only 1 A header under 1 D header
-								{
-									delete currentPositionA;
-									if (previousPositionD != nullptr && currentPositionD->pNext != nullptr) // there are several D headers, header under removal is in the middle
-									{
-										previousPositionD->pNext = currentPositionD->pNext;
-										delete currentPositionD;
-										return pointer;
-									}
-									else if (previousPositionD != nullptr && currentPositionD->pNext == nullptr) // there are several D headers, header under removal is at the end
-									{
-										previousPositionD->pNext = nullptr;
-										delete currentPositionD;
-										return pointer;
-									}
-									else if (previousPositionD == nullptr && currentPositionD->pNext != nullptr) // there are several D headers, header under removal is at the start
-									{
-										pointer = currentPositionD->pNext;
-										delete currentPositionD;
-										return pointer;
-									}
-									else if (previousPositionD == nullptr && currentPositionD->pNext == nullptr) // there is only 1 D header, resuting data structure is empty
-									{
-										delete currentPositionD;
-										return nullptr;
-									}
-								}
-							}
-						}
-						previousPositionItem = currentPositionItem;
-						currentPositionItem = currentPositionItem->pNext;
-					}
-				}
-				previousPositionA = currentPositionA;
-				currentPositionA = currentPositionA->pNext;
-			}
-		}
-		previousPositionD = currentPositionD;
-		currentPositionD = currentPositionD->pNext;
-	}
-	// header D with the required letter does not exist - require item for removal does not exist
-	if (headerDFlag == 0)
-	{
-		printf("Item with such ID does not exist - Header D\n");
-		return pointer;
-	}
-	else if (headerDFlag == 1 && headerAFlag == 0)
-	{
-		printf("Item with such ID does not exist - Header A\n");
-		return pointer;
-	}
-	else if (headerDFlag == 1 && headerAFlag == 1 && itemFlag == 0)
-	{
-		printf("Item with such ID does not exist - ITEM\n");
-		return pointer;
-	}
-}
+#include "Coursework2.h"
 
 int main()
 {
-	// Task 1
-	HEADER_D* DS = GetStruct4(1, 30);
-	PrintDataStructure(DS);
-	printf("\n");
+	//// Task 1
+	//HEADER_D* DS = GetStruct4(1, 30);
+	//PrintDataStructure(DS);
+	//printf("\n");
+	//// TASK 2
+	//DS = InsertItem(DS, (char*)"Z A");
+	//DS = InsertItem(DS, (char*)"Z Z");
+	//DS = InsertItem(DS, (char*)"Z K");
+	//DS = InsertItem(DS, (char*)"A Z");
+	//DS = InsertItem(DS, (char*)"A A");
+	//DS = InsertItem(DS, (char*)"A K");
+	//DS = InsertItem(DS, (char*)"G Z");
+	//DS = InsertItem(DS, (char*)"G A");
+	//DS = InsertItem(DS, (char*)"G K");
+	//DS = InsertItem(DS, (char*)"M A");
+	//DS = InsertItem(DS, (char*)"M Ba");
+	//DS = InsertItem(DS, (char*)"M Bb");
+	//DS = InsertItem(DS, (char*)"M Z");
+	//DS = InsertItem(DS, (char*)"M Ba");
+	//DS = InsertItem(DS, (char*)"Mba");
+	//printf("\n");
+	//PrintDataStructure(DS);
+	//printf("\n");
+	//// TASK 3
+	//DS = RemoveItem(DS, (char*)"Z A");
+	//DS = RemoveItem(DS, (char*)"Z Z");
+	//DS = RemoveItem(DS, (char*)"Z K");
+	//DS = RemoveItem(DS, (char*)"A Z");
+	//DS = RemoveItem(DS, (char*)"A A");
+	//DS = RemoveItem(DS, (char*)"A K");
+	//DS = RemoveItem(DS, (char*)"G Z");
+	//DS = RemoveItem(DS, (char*)"G A");
+	//DS = RemoveItem(DS, (char*)"G K");
+	//DS = RemoveItem(DS, (char*)"M A");
+	//DS = RemoveItem(DS, (char*)"M Ba");
+	//DS = RemoveItem(DS, (char*)"M Bb");
+	//DS = RemoveItem(DS, (char*)"M Z");
+	//DS = RemoveItem(DS, (char*)"M Ba");
+	//DS = RemoveItem(DS, (char*)"Mba");
+	//printf("\n");
+	//PrintDataStructure(DS);
 
-	// TASK 2
-	DS = InsertItem(DS, (char*)"Z A");
-	DS = InsertItem(DS, (char*)"Z Z");
-	DS = InsertItem(DS, (char*)"Z K");
-	DS = InsertItem(DS, (char*)"A Z");
-	DS = InsertItem(DS, (char*)"A A");
-	DS = InsertItem(DS, (char*)"A K");
-	DS = InsertItem(DS, (char*)"G Z");
-	DS = InsertItem(DS, (char*)"G A");
-	DS = InsertItem(DS, (char*)"G K");
-	DS = InsertItem(DS, (char*)"M A");
-	DS = InsertItem(DS, (char*)"M Ba");
-	DS = InsertItem(DS, (char*)"M Bb");
-	DS = InsertItem(DS, (char*)"M Z");
-	DS = InsertItem(DS, (char*)"M Ba");
-	DS = InsertItem(DS, (char*)"Mba");
-	printf("\n");
-	PrintDataStructure(DS);
-	printf("\n");
+	// 1 - Creates empty data structure
+	DataStructure testDS;
 
-	// TASK 3
-	DS = RemoveItem(DS, (char*)"Z A");
-	DS = RemoveItem(DS, (char*)"Z Z");
-	DS = RemoveItem(DS, (char*)"Z K");
-	DS = RemoveItem(DS, (char*)"A Z");
-	DS = RemoveItem(DS, (char*)"A A");
-	DS = RemoveItem(DS, (char*)"A K");
-	DS = RemoveItem(DS, (char*)"G Z");
-	DS = RemoveItem(DS, (char*)"G A");
-	DS = RemoveItem(DS, (char*)"G K");
-	DS = RemoveItem(DS, (char*)"M A");
-	DS = RemoveItem(DS, (char*)"M Ba");
-	DS = RemoveItem(DS, (char*)"M Bb");
-	DS = RemoveItem(DS, (char*)"M Z");
-	DS = RemoveItem(DS, (char*)"M Ba");
-	DS = RemoveItem(DS, (char*)"Mba");
-	printf("\n");
-	PrintDataStructure(DS);
+	//2 - Inserts 10 items into data structure(in a simple loop that calls 10 times operator += )
+	for (char i = 0; i < 10; i++)
+	{
+		testDS += (ITEM1*)GetItem(1, nullptr);
+	}
+	std::cout << std::endl;
+
+	// 3 - Prints the resulting data structure
+	std::cout << testDS;
+	std::cout << std::endl;
+
+	// 4 - Prints the number of elements indata structure (using GetItemsNumber)
+	std::cout << std::endl << "Number of items in the dat structure object: " << testDS.GetItemsNumber() << std::endl;
+	std::cout << std::endl;
+
+	// 5 - Retrieves item with ID Light Cyan
+	ITEM1* retrievedItem = testDS.GetItem((char*)"Light Cyan");
+	std::cout << std::endl;
+
+	// 6 - Tries to retrieve non-existing element X X
+	retrievedItem = testDS.GetItem((char*)"X X");
+	std::cout << std::endl;
+
+	// 7 - Using the copy constructor creates the copy of current structure
+	DataStructure duplicateTestDataStructure{ testDS };
+	std::cout << std::endl;
+
+	// 8 - Removes items Banana Mania, Persian Green and Vegas Gold from the initial structure
+	testDS -= (char*)"Banana Mania";
+	std::cout << std::endl;
+	testDS -= (char*)"Persian Green";
+	std::cout << std::endl;
+	testDS -= (char*)"Vegas Gold";
+	std::cout << std::endl;
+
+
+	// 9 - Compares the initial structure (now with 7 items) with the copy structure
+	std::cout << std::endl << "Result of comparison between modified original and duplicated structures: " << (testDS == duplicateTestDataStructure);
+	std::cout << std::endl;
+
+	// 10 - Writes the initial structure (now 7 items) into a data file
+	// path example 	char folderPath[] = "C:\\Users\\Your_User\\Downloads\\random_files\\file";
+	testDS.Write((char*)"C:\\Users\\Artur\\Desktop\\DS.txt");
+	std::cout << std::endl;
+
+	// 11 - Creates a new structure from thisdata file and compares it with initial stucture.
+	DataStructure readInTestDS{ (char*)"C:\\Users\\Core\\Downloads\\file" };
+	std::cout << std::endl << "Result of comparison between original and read in structures: " << (testDS == readInTestDS);
+	std::cout << std::endl;
+
+	// 12 - Assigns to the structure just created (7 items) the copy created in step 7 (10 items) and printsthe result
+	std::cout << std::endl << std::endl;
+	readInTestDS = duplicateTestDataStructure;
+	std::cout << std::endl << std::endl;
+	std::cout << readInTestDS;
+
 }

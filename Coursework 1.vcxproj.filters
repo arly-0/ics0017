@@ -32,5 +32,11 @@
     <ClInclude Include="ICS0017DataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Coursework2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Coursework1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
