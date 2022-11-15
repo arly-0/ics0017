@@ -42,7 +42,6 @@ private:
 		return false;
 	}
 public:
-	//DataStructure(void) :pointer(nullptr) {} // create empty data structure
 	DataStructure(){}
 
 	DataStructure(int itemCount) // create data structure filled with GetStruct function
@@ -101,86 +100,35 @@ public:
 
 	DataStructure(const DataStructure& Original) // create data structure copy
 	{
-		if (Original.pointer == nullptr) // data structure is empty
-
+		if (Original.pointer == NULL)
 		{
-
-			std::cout << "Passed data structure is empty, copy is also empty." << std::endl;
-
-			pointer = nullptr;
-
+			printf("DS is null and will not be printed\n");
 			return;
-
 		}
-
-
-		pointer = nullptr;
-
-		HEADER_D* currentPositionBPtr = Original.pointer;
-
-		HEADER_A* currentPositionAPtr = nullptr;
-
-		ITEM1* currentPositionItemPtr = nullptr;
-
-
-		// copy items
-
-		// while loop covering HEADER_B, with a letter of the 1st word
-
-		while (currentPositionBPtr)
-
+		HEADER_D* currentHeaderD = Original.pointer;
+		HEADER_A* currentHeaderA = nullptr;
+		ITEM1* currentItem = nullptr;
+		int i = 0;
+		while (currentHeaderD)
 		{
-
-			currentPositionAPtr = currentPositionBPtr->pHeaderA;
-
-			// while loop covering HEADER_A, with a letter of the 2nd word
-
-			while (currentPositionAPtr)
-
+			currentHeaderA = currentHeaderD->pHeaderA;
+			while (currentHeaderA)
 			{
-
-				currentPositionItemPtr = (ITEM1*)currentPositionAPtr->pItems;
-
-				// while loop covering items
-
-				while (currentPositionItemPtr)
-
+				currentItem = (ITEM1*)currentHeaderA->pItems;
+				while (currentItem)
 				{
-
-					char* timeDuplicatePtr = new char[strlen(currentPositionItemPtr->pTime) + 1];
-
-					char* duplicateIDPtr = new char[strlen(currentPositionItemPtr->pID) + 1];
-
-					strcpy_s(duplicateIDPtr, strlen(currentPositionItemPtr->pID) + 1, currentPositionItemPtr->pID);
-					strcpy_s(timeDuplicatePtr, strlen(currentPositionItemPtr->pTime) + 1, currentPositionItemPtr->pTime);
-
-					ITEM1* itemDuplicatePtr = new ITEM1;
-
-					itemDuplicatePtr->pID = duplicateIDPtr;
-
-					itemDuplicatePtr->Code = currentPositionItemPtr->Code;
-
-					itemDuplicatePtr->pTime = timeDuplicatePtr;
-
-					itemDuplicatePtr->pNext = nullptr;
-
-
-					*this += itemDuplicatePtr;
-
-					currentPositionItemPtr = currentPositionItemPtr->pNext;
-
+					ITEM1* pNewItem = new ITEM1;
+					pNewItem->Code = currentItem->Code;
+					pNewItem->pID = currentItem->pID;
+					pNewItem->pTime = currentItem->pTime;
+					pNewItem->pNext = 0;
+					*this += pNewItem;
+					currentItem = currentItem->pNext;
 				}
-
-				currentPositionAPtr = currentPositionAPtr->pNext;
-
+				currentHeaderA = currentHeaderA->pNext;
 			}
-
-			currentPositionBPtr = currentPositionBPtr->pNext;
-
+			currentHeaderD = currentHeaderD->pNext;
 		}
-
-		return;
-
 	}; 
 
 	~DataStructure(void)  // remove datastructure
@@ -311,22 +259,16 @@ public:
 	ITEM1* GetItem(char* pID)  // return pointer to an item with the specified ID
 	{
 		if (!pointer) {
-
 			std::cout << "Data structure does not exist. (DataStructure::GetItem)" << std::endl;
-
-			return nullptr;
-
+			return 0;
 		}
 
 
 		if (!pID) // ID does not exist
 
 		{
-
 			std::cout << "Passed ID for removal is empty, aborting extraction of an item. (DataStructure::GetItem)" << std::endl;
-
-			return nullptr;
-
+			return 0;
 		}
 
 		else // ID exists, check it
@@ -338,7 +280,7 @@ public:
 			{
 				std::cout << "Incorrect item ID is passed, aborting extraction of an item. (DataStructure::GetItem)" << std::endl;
 
-				return nullptr;
+				return 0;
 			}
 
 		}
@@ -376,7 +318,7 @@ public:
 					if (!strcmp(currentPositionItemPtr->pID, pID)) // item with the specified ID exists
 
 					{
-
+						std::cout << "Item retrieved: " << currentPositionItemPtr->pID << " " << currentPositionItemPtr->Code << " " << currentPositionItemPtr->pTime << "\n";
 						return currentPositionItemPtr;
 
 					}
@@ -393,9 +335,9 @@ public:
 
 		}
 
-		std::cout << "Item with the requested ID does not exist in the data structure. (DataStructure::GetItem)" << std::endl;
+		std::cout << "Item with the requested ID does not exist in the data structure. ID: " << pID << std::endl;
 
-		return nullptr;
+		return 0;
 
 	};
 
