@@ -85,10 +85,10 @@ int main()
 	std::cout << std::endl << "Result of comparison between modified original and duplicated structures: " << (testDS == duplicateTestDataStructure);
 	std::cout << std::endl;
 
-	//// 10 - Writes the initial structure (now 7 items) into a data file
-	//// path example 	char folderPath[] = "C:\\Users\\Your_User\\Downloads\\random_files\\file";
-	//testDS.Write((char*)"C:\\Users\\Artur\\Desktop\\DS.txt");
-	//std::cout << std::endl;
+	// 10 - Writes the initial structure (now 7 items) into a data file
+	// path example 	char folderPath[] = "C:\\Users\\Your_User\\Downloads\\random_files\\file";
+	testDS.Write((char*)"C:\\Users\\Artur\\Desktop\\DS.txt");
+	std::cout << std::endl;
 
 	//// 11 - Creates a new structure from this data file and compares it with initial stucture.
 	//DataStructure readInTestDS{ (char*)"C:\\Users\\Artur\\Desktop\\DS.txt" };
