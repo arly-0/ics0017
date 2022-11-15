@@ -11,7 +11,7 @@
 class DataStructure : CourseWork1
 {
 private:
-	HEADER_D* pointer;
+	HEADER_D* pointer = new HEADER_D [26]();
 	bool CheckItem(char* pID)
 	{
 		HEADER_D* pB = pointer;
@@ -43,10 +43,7 @@ private:
 	}
 public:
 	//DataStructure(void) :pointer(nullptr) {} // create empty data structure
-	DataStructure(void)
-	{
-		pointer;
-	}
+	DataStructure(){}
 
 	DataStructure(int itemCount) // create data structure filled with GetStruct function
 	{
@@ -502,20 +499,17 @@ public:
 		const int numWidth = 20;
 
 		int counter = 1;
-
-		std::cout << "[ID] " << std::left << std::setw(nameWidth) << std::setfill(separator) << "[NAME]" << std::setw(numWidth) << std::setfill(separator) << "[CODE]" << std::setw(numWidth) << std::setfill(separator) << "[DATE]" << std::endl;
-
 		while (pB)
 		{
 			HEADER_A* pA = pB->pHeaderA;
 
 			while (pA)
 			{
-				ITEM4* res = (ITEM4*)pA->pItems;
+				ITEM1* res = (ITEM1*)pA->pItems;
 				while (res)
 				{
 					if (counter < 10) { std::cout << "0"; }
-					std::cout << counter << ") " << std::left << std::setw(nameWidth) << std::setfill(separator) << res->pID << std::setw(numWidth) << std::setfill(separator) << res->Code << std::setw(numWidth) << std::setfill(separator) << res->pDate << std::endl;
+					std::cout << counter << ") " << std::left << std::setw(nameWidth) << std::setfill(separator) << res->pID << std::setw(numWidth) << std::setfill(separator) << res->Code << std::setw(numWidth) << std::setfill(separator) << res->pTime << std::endl;
 					counter++;
 
 					res = res->pNext;
