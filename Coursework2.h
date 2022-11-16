@@ -283,7 +283,74 @@ public:
 
 	DataStructure& operator=(const DataStructure& Right) // assignment
 	{
-		return *new DataStructure(Right);
+		if (Right.pointer == pointer) return *this;
+		if (Right.pointer == nullptr)
+		{
+			std::cout << "Passed data structure is empty, creating empty structure.\n" << std::endl;
+			DataStructure* emptyDataStructureObject = new DataStructure;
+			return *emptyDataStructureObject;
+		}
+
+		HEADER_D* currentPositionBPtr = pointer;
+		HEADER_D* bufferPositionBPtr = nullptr;
+		HEADER_A* currentPositionAPtr = nullptr;
+		HEADER_A* bufferPositionAPtr = nullptr;
+		ITEM1* currentPositionItemPtr = nullptr;
+		ITEM1* bufferPositionItemPtr = nullptr;
+
+		// remove items if the initial data structure is not empty
+		// while loop covering HEADER_D, with a letter of the 1st word
+		while (currentPositionBPtr)
+		{
+			bufferPositionBPtr = currentPositionBPtr->pNext;
+			currentPositionAPtr = currentPositionBPtr->pHeaderA;
+			// while loop covering HEADER_A, with a letter of the 2nd word
+			while (currentPositionAPtr)
+			{
+				bufferPositionAPtr = currentPositionAPtr->pNext;
+				currentPositionItemPtr = (ITEM1*)currentPositionAPtr->pItems;
+				// while loop covering items
+				while (currentPositionItemPtr)
+				{
+					bufferPositionItemPtr = currentPositionItemPtr->pNext;
+					*this -= currentPositionItemPtr->pID;
+					currentPositionItemPtr = bufferPositionItemPtr;
+				}
+				currentPositionAPtr = bufferPositionAPtr;
+			}
+			currentPositionBPtr = bufferPositionBPtr;
+		}
+		currentPositionBPtr = Right.pointer;
+		
+		// copy items
+		// while loop covering HEADER_D, with a letter of the 1st word
+		while (currentPositionBPtr)
+		{
+			currentPositionAPtr = currentPositionBPtr->pHeaderA;
+			// while loop covering HEADER_A, with a letter of the 2nd word
+			while (currentPositionAPtr)
+			{
+				currentPositionItemPtr = (ITEM1*)currentPositionAPtr->pItems;
+				// while loop covering items
+				while (currentPositionItemPtr)
+				{
+					char* duplicateIDPtr = new char[strlen(currentPositionItemPtr->pID) + 1];
+					strcpy_s(duplicateIDPtr, strlen(currentPositionItemPtr->pID) + 1, currentPositionItemPtr->pID);
+					char* duplicateTimePtr = new char[strlen(currentPositionItemPtr->pTime) + 1];
+					strcpy_s(duplicateTimePtr, strlen(currentPositionItemPtr->pTime) + 1, currentPositionItemPtr->pTime);
+					ITEM1* itemDuplicatePtr = new ITEM1;
+					itemDuplicatePtr->pID = duplicateIDPtr;
+					itemDuplicatePtr->Code = currentPositionItemPtr->Code;
+					itemDuplicatePtr->pTime = duplicateTimePtr;
+					itemDuplicatePtr->pNext = nullptr;
+					*this += itemDuplicatePtr;
+					currentPositionItemPtr = currentPositionItemPtr->pNext;
+				}
+				currentPositionAPtr = currentPositionAPtr->pNext;
+			}
+			currentPositionBPtr = currentPositionBPtr->pNext;
+		}
+		return *this;
 	};
 
 	int operator==(DataStructure& Other) // comparison, returns 0 for no equality, 1 for equality
