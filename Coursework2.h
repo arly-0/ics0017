@@ -324,7 +324,7 @@ public:
 		
 		// copy items
 		// while loop covering HEADER_D, with a letter of the 1st word
-		while (currentHeaderD)
+		while (currentHeaderD)	
 		{
 			currentHeaderA = currentHeaderD->pHeaderA;
 			// while loop covering HEADER_A, with a letter of the 2nd word
