@@ -287,68 +287,68 @@ public:
 		if (Right.pointer == nullptr)
 		{
 			std::cout << "Passed data structure is empty, creating empty structure.\n" << std::endl;
-			DataStructure* emptyDataStructureObject = new DataStructure;
-			return *emptyDataStructureObject;
+			DataStructure* emptyDS = new DataStructure;
+			return *emptyDS;
 		}
 
-		HEADER_D* currentPositionBPtr = pointer;
-		HEADER_D* bufferPositionBPtr = nullptr;
-		HEADER_A* currentPositionAPtr = nullptr;
-		HEADER_A* bufferPositionAPtr = nullptr;
-		ITEM1* currentPositionItemPtr = nullptr;
-		ITEM1* bufferPositionItemPtr = nullptr;
+		HEADER_D* currentHeaderD = pointer;
+		HEADER_D* bufferHeaderD = nullptr;
+		HEADER_A* currentHeaderA = nullptr;
+		HEADER_A* bufferHeaderA = nullptr;
+		ITEM1* currentItem = nullptr;
+		ITEM1* bufferItem = nullptr;
 
 		// remove items if the initial data structure is not empty
 		// while loop covering HEADER_D, with a letter of the 1st word
-		while (currentPositionBPtr)
+		while (currentHeaderD)
 		{
-			bufferPositionBPtr = currentPositionBPtr->pNext;
-			currentPositionAPtr = currentPositionBPtr->pHeaderA;
+			bufferHeaderD = currentHeaderD->pNext;
+			currentHeaderA = currentHeaderD->pHeaderA;
 			// while loop covering HEADER_A, with a letter of the 2nd word
-			while (currentPositionAPtr)
+			while (currentHeaderA)
 			{
-				bufferPositionAPtr = currentPositionAPtr->pNext;
-				currentPositionItemPtr = (ITEM1*)currentPositionAPtr->pItems;
+				bufferHeaderA = currentHeaderA->pNext;
+				currentItem = (ITEM1*)currentHeaderA->pItems;
 				// while loop covering items
-				while (currentPositionItemPtr)
+				while (currentItem)
 				{
-					bufferPositionItemPtr = currentPositionItemPtr->pNext;
-					*this -= currentPositionItemPtr->pID;
-					currentPositionItemPtr = bufferPositionItemPtr;
+					bufferItem = currentItem->pNext;
+					*this -= currentItem->pID;
+					currentItem = bufferItem;
 				}
-				currentPositionAPtr = bufferPositionAPtr;
+				currentHeaderA = bufferHeaderA;
 			}
-			currentPositionBPtr = bufferPositionBPtr;
+			currentHeaderD = bufferHeaderD;
 		}
-		currentPositionBPtr = Right.pointer;
+		currentHeaderD = Right.pointer;
 		
 		// copy items
 		// while loop covering HEADER_D, with a letter of the 1st word
-		while (currentPositionBPtr)
+		while (currentHeaderD)
 		{
-			currentPositionAPtr = currentPositionBPtr->pHeaderA;
+			currentHeaderA = currentHeaderD->pHeaderA;
 			// while loop covering HEADER_A, with a letter of the 2nd word
-			while (currentPositionAPtr)
+			while (currentHeaderA)
 			{
-				currentPositionItemPtr = (ITEM1*)currentPositionAPtr->pItems;
+				currentItem = (ITEM1*)currentHeaderA->pItems;
 				// while loop covering items
-				while (currentPositionItemPtr)
+				while (currentItem)
 				{
-					char* duplicateIDPtr = new char[strlen(currentPositionItemPtr->pID) + 1];
-					strcpy_s(duplicateIDPtr, strlen(currentPositionItemPtr->pID) + 1, currentPositionItemPtr->pID);
-					char* duplicateTimePtr = new char[strlen(currentPositionItemPtr->pTime) + 1];
-					strcpy_s(duplicateTimePtr, strlen(currentPositionItemPtr->pTime) + 1, currentPositionItemPtr->pTime);
-					ITEM1* itemDuplicatePtr = new ITEM1;
-					itemDuplicatePtr->pID = duplicateIDPtr;
-					itemDuplicatePtr->Code = currentPositionItemPtr->Code;
-					itemDuplicatePtr->pTime = duplicateTimePtr;
-					itemDuplicatePtr->pNext = nullptr;
-					*this += itemDuplicatePtr;
-					currentPositionItemPtr = currentPositionItemPtr->pNext;
+					char* duplicateID = new char[strlen(currentItem->pID) + 1];
+					strcpy_s(duplicateID, strlen(currentItem->pID) + 1, currentItem->pID);
+					char* duplicateTime = new char[strlen(currentItem->pTime) + 1];
+					strcpy_s(duplicateTime, strlen(currentItem->pTime) + 1, currentItem->pTime);
+					ITEM1* duplicateItem = new ITEM1;
+					duplicateItem->pID = duplicateID;
+					duplicateItem->Code = currentItem->Code;
+					duplicateItem->pTime = duplicateTime;
+					duplicateItem->pNext = nullptr;
+					*this += duplicateItem;
+					currentItem = currentItem->pNext;
 				}
-				currentPositionAPtr = currentPositionAPtr->pNext;
+				currentHeaderA = currentHeaderA->pNext;
 			}
-			currentPositionBPtr = currentPositionBPtr->pNext;
+			currentHeaderD = currentHeaderD->pNext;
 		}
 		return *this;
 	};
