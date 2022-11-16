@@ -90,11 +90,11 @@ int main()
 	testDS.Write((char*)"C:\\Users\\Artur\\Desktop\\DS.txt");
 	std::cout << std::endl;
 
-	//// 11 - Creates a new structure from this data file and compares it with initial stucture.
-	//DataStructure readInTestDS{ (char*)"C:\\Users\\Artur\\Desktop\\DS.txt" };
-	//std::cout << std::endl << "Result of comparison between original and read from file structures: " << (testDS == readInTestDS);
-	//std::cout << std::endl;
-
+	// 11 - Creates a new structure from this data file and compares it with initial stucture.
+	DataStructure readInTestDS{ (char*)"C:\\Users\\Artur\\Desktop\\DS.txt" };
+	std::cout << std::endl << "Result of comparison between original and read from file structures: " << (testDS == readInTestDS);
+	std::cout << std::endl;
+	
 	//// 12 - Assigns to the structure just created (7 items) the copy created in step 7 (10 items) and prints the result
 	//std::cout << std::endl;
 	//readInTestDS = duplicateTestDataStructure;

@@ -14,13 +14,13 @@ private:
 	HEADER_D* pointer = new HEADER_D [26]();
 	bool CheckItem(char* pID)
 	{
-		HEADER_D* pB = pointer;
+		HEADER_D* pHeaderD = pointer;
 		HEADER_A* pA;
 		ITEM1* pItem;
 
-		while (pB)
+		while (pHeaderD)
 		{
-			pA = pB->pHeaderA;
+			pA = pHeaderD->pHeaderA;
 			while (pA)
 			{
 				if (pA->pItems)
@@ -37,7 +37,7 @@ private:
 				}
 				pA = pA->pNext;
 			}
-			pB = pB->pNext;
+			pHeaderD = pHeaderD->pNext;
 		}
 		return false;
 	}
@@ -51,50 +51,43 @@ public:
 
 	DataStructure(char* pFilename) // create data structure filled with a file
 	{
-		if (!pFilename) // filename is empty
+		std::fstream File;
+		File.open(pFilename, std::fstream::in | std::fstream::binary | std::fstream::app);
+		std::string buf;
+		ITEM1* newItem = NULL;
+
+		try 
 		{
-			std::cout << "Filename does not exist." << std::endl;
-			return;
+			if (File.good())
+			{
+				while (getline(File, buf, ';'))
+				{
+					if (buf == "\n")
+					{
+						break;
+					}
+					newItem = new ITEM1;
+					char* newID = new char[buf.length() + 1];
+					strcpy_s(newID, buf.length() + 1, buf.c_str());
+					newItem->pID = newID;
+					getline(File, buf, ';');
+					newItem->Code = stoul(buf);
+					getline(File, buf, ';');
+					char* newTime = new char[buf.length() + 1];
+					strcpy_s(newTime, buf.length() + 1, buf.c_str());
+					newItem->pTime = newTime;
+					getline(File, buf, '\n');
+					*this += newItem;
+				}
+			}
+			else
+			{
+				throw std::exception("Could not open file");
+			}
 		}
-		FILE* pFile = fopen(pFilename, "rb");
-		char* pData;
-		long lSize;
-		if (pFile) {
-			fseek(pFile, 0, SEEK_END);
-			lSize = ftell(pFile);
-			rewind(pFile);
-			pData = (char*)malloc(lSize);
-			int n = fread(pData, 1, lSize, pFile);
-			fclose(pFile);
-		}
-		else 
+		catch (const std::exception & e)
 		{
-			std::cout << "Error reading file" << std::endl;
-			return;
-		}
-		char* cursor;
-		int totalItems = 0;
-		memcpy(&totalItems, cursor = pData, sizeof(int));
-		cursor += sizeof(int);
-		for (int i = 0; i < totalItems; i++) {
-			int pIdSize = 0;
-			int pTimeSize = 0;
-			char* pID;
-			unsigned long int code = 0;
-			char* pTime;
-			memcpy(&pIdSize, cursor, sizeof(int));
-			pID = (char*)malloc(pIdSize * sizeof(char));
-			memcpy(pID, cursor += sizeof(int), pIdSize);
-			memcpy(&code, cursor += pIdSize, sizeof(unsigned long int));
-			memcpy(&pTimeSize, cursor += pTimeSize, sizeof(char));
-			pTime = (char*)malloc(pTimeSize * sizeof(char));
-			memcpy(pTime, cursor += sizeof(int), pTimeSize);
-			cursor += sizeof(int);
-			ITEM1* p = CourseWork1::CreateItem1(pID);
-			p->pTime = pTime;
-			p->Code = code;
-			p->pID = pID;
-			*this += p;
+			std::cout << e.what() << std::endl;
 		}
 	}
 
@@ -133,12 +126,12 @@ public:
 
 	~DataStructure(void)  // remove datastructure
 	{
-		HEADER_D* pB = pointer;
-		HEADER_D* pBprev = NULL;
+		HEADER_D* pHeaderD = pointer;
+		HEADER_D* pHeaderDprev = NULL;
 
-		while (pB)
+		while (pHeaderD)
 		{
-			HEADER_A* pA = pB->pHeaderA;
+			HEADER_A* pA = pHeaderD->pHeaderA;
 			HEADER_A* pAprev = NULL;
 			while (pA)
 			{
@@ -178,20 +171,20 @@ public:
 					pA = pA->pNext;
 				}
 			}
-			if (pBprev != NULL)
+			if (pHeaderDprev != NULL)
 			{
-				delete pBprev;
+				delete pHeaderDprev;
 			}
 
-			pBprev = pB;
-			if (!pB->pNext)
+			pHeaderDprev = pHeaderD;
+			if (!pHeaderD->pNext)
 			{
-				delete pB;
+				delete pHeaderD;
 				break;
 			}
 			else
 			{
-				pB = pB->pNext;
+				pHeaderD = pHeaderD->pNext;
 			}
 		}
 	};
@@ -207,48 +200,48 @@ public:
 		}
 
 
-		HEADER_D* currentPositionBPtr = pointer;
+		HEADER_D* currentHeaderD = pointer;
 
-		HEADER_A* currentPositionAPtr = nullptr;
+		HEADER_A* currentHeaderA = nullptr;
 
-		ITEM1* currentPositionItemPtr = nullptr;
+		ITEM1* currentItem = nullptr;
 
 		int itemCount = 0;
 
 
-		// while loop covering HEADER_B, with a letter of the 1st word
+		// while loop covering HEADER_D, with a letter of the 1st word
 
-		while (currentPositionBPtr)
+		while (currentHeaderD)
 
 		{
 
-			currentPositionAPtr = currentPositionBPtr->pHeaderA;
+			currentHeaderA = currentHeaderD->pHeaderA;
 
 			// while loop covering HEADER_A, with a letter of the 2nd word
 
-			while (currentPositionAPtr)
+			while (currentHeaderA)
 
 			{
 
-				currentPositionItemPtr = (ITEM1*)currentPositionAPtr->pItems;
+				currentItem = (ITEM1*)currentHeaderA->pItems;
 
 				// while loop covering items
 
-				while (currentPositionItemPtr)
+				while (currentItem)
 
 				{
 
 					itemCount += 1;
 
-					currentPositionItemPtr = currentPositionItemPtr->pNext;
+					currentItem = currentItem->pNext;
 
 				}
 
-				currentPositionAPtr = currentPositionAPtr->pNext;
+				currentHeaderA = currentHeaderA->pNext;
 
 			}
 
-			currentPositionBPtr = currentPositionBPtr->pNext;
+			currentHeaderD = currentHeaderD->pNext;
 
 		}
 
@@ -286,52 +279,52 @@ public:
 		}
 
 
-		HEADER_D* currentPositionBPtr = pointer;
+		HEADER_D* currentHeaderD = pointer;
 
-		HEADER_A* currentPositionAPtr = nullptr;
+		HEADER_A* currentHeaderA = nullptr;
 
-		ITEM1* currentPositionItemPtr = nullptr;
+		ITEM1* currentItem = nullptr;
 
 
-		// while loop covering HEADER_B, with a letter of the 1st word
+		// while loop covering HEADER_D, with a letter of the 1st word
 
-		while (currentPositionBPtr)
+		while (currentHeaderD)
 
 		{
 
-			currentPositionAPtr = currentPositionBPtr->pHeaderA;
+			currentHeaderA = currentHeaderD->pHeaderA;
 
 			// while loop covering HEADER_A, with a letter of the 2nd word
 
-			while (currentPositionAPtr)
+			while (currentHeaderA)
 
 			{
 
-				currentPositionItemPtr = (ITEM1*)currentPositionAPtr->pItems;
+				currentItem = (ITEM1*)currentHeaderA->pItems;
 
 				// while loop covering items
 
-				while (currentPositionItemPtr)
+				while (currentItem)
 
 				{
 
-					if (!strcmp(currentPositionItemPtr->pID, pID)) // item with the specified ID exists
+					if (!strcmp(currentItem->pID, pID)) // item with the specified ID exists
 
 					{
-						std::cout << "Item retrieved: " << currentPositionItemPtr->pID << " " << currentPositionItemPtr->Code << " " << currentPositionItemPtr->pTime << "\n";
-						return currentPositionItemPtr;
+						std::cout << "Item retrieved: " << currentItem->pID << " " << currentItem->Code << " " << currentItem->pTime << "\n";
+						return currentItem;
 
 					}
 
-					currentPositionItemPtr = currentPositionItemPtr->pNext;
+					currentItem = currentItem->pNext;
 
 				}
 
-				currentPositionAPtr = currentPositionAPtr->pNext;
+				currentHeaderA = currentHeaderA->pNext;
 
 			}
 
-			currentPositionBPtr = currentPositionBPtr->pNext;
+			currentHeaderD = currentHeaderD->pNext;
 
 		}
 
@@ -364,13 +357,13 @@ public:
 	{
 		if (GetItemsNumber() == Other.GetItemsNumber())
 		{
-			HEADER_D* pB = pointer;
+			HEADER_D* pHeaderD = pointer;
 			HEADER_A* pA;
 			ITEM1* pItem;
 
-			while (pB)
+			while (pHeaderD)
 			{
-				pA = pB->pHeaderA;
+				pA = pHeaderD->pHeaderA;
 				while (pA)
 				{
 					if (pA->pItems)
@@ -387,7 +380,7 @@ public:
 					}
 					pA = pA->pNext;
 				}
-				pB = pB->pNext;
+				pHeaderD = pHeaderD->pNext;
 			}
 			return 1;
 		}
@@ -404,10 +397,10 @@ public:
 
 		if (File.good())
 		{
-			HEADER_D* pB = pointer;
-			while (pB)
+			HEADER_D* pHeaderD = pointer;
+			while (pHeaderD)
 			{
-				HEADER_A* pA = pB->pHeaderA;
+				HEADER_A* pA = pHeaderD->pHeaderA;
 
 				while (pA)
 				{
@@ -423,7 +416,7 @@ public:
 					pA = pA->pNext;
 				}
 
-				pB = pB->pNext;
+				pHeaderD = pHeaderD->pNext;
 			}
 		}
 		else
@@ -435,15 +428,15 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& ostr, const DataStructure& str) // prints all the items into the command prompt
 	{
-		HEADER_D* pB = str.pointer;
+		HEADER_D* pHeaderD = str.pointer;
 		const char separator = ' ';
 		const int nameWidth = 30;
 		const int numWidth = 20;
 
 		int counter = 1;
-		while (pB)
+		while (pHeaderD)
 		{
-			HEADER_A* pA = pB->pHeaderA;
+			HEADER_A* pA = pHeaderD->pHeaderA;
 
 			while (pA)
 			{
@@ -459,7 +452,7 @@ public:
 				pA = pA->pNext;
 			}
 
-			pB = pB->pNext;
+			pHeaderD = pHeaderD->pNext;
 		}
 		return std::cout;
 	}; 
